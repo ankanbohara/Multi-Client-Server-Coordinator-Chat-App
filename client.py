@@ -4,7 +4,7 @@ import errno
 import sys
 import time
 import re
-HEADER_LENGTH = 10
+HEADER_LENGTH = 20
 
 COORD_IP = "127.0.0.1"
 
@@ -15,6 +15,7 @@ my_username = input("Username: ")
 re1 = "[E|e]xit"
 re2 = "[Q|q]uit"
 re3 = "[B|b]ye.*"
+re4 = "[G|g]ood[b|B]ye"
 
 def talk_with_ss(recv_port):
 
@@ -40,7 +41,7 @@ def talk_with_ss(recv_port):
         if message:
 
             # Encode message to bytes, prepare header and convert to bytes, like for username above, then send
-            if re.compile("(%s|%s|%s)" % (re1, re2, re3)).findall(message):
+            if re.compile("(%s|%s|%s|%s)" % (re1, re2, re3, re4)).findall(message):
                 sys.exit()
             message = message.encode('utf-8')
             message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
@@ -79,10 +80,6 @@ def talk_with_ss(recv_port):
             break
 
         except IOError as e:
-            # This is normal on non blocking connections - when there are no incoming data error is going to be raised
-            # Some operating systems will indicate that using AGAIN, and some using WOULDBLOCK error code
-            # We are going to check for both - if one of them - that's expected, means no incoming data, continue as normal
-            # If we got different error code - something happened
             if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
                 print('Reading error: {}'.format(str(e)))
                 break
@@ -91,7 +88,6 @@ def talk_with_ss(recv_port):
             continue
 
         except Exception as e:
-            # Any other exception - something happened, exit
             print('Reading error: '.format(str(e)))
             break
 
